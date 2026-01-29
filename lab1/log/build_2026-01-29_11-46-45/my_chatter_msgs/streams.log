@@ -1,0 +1,63 @@
+[0.241s] Invoking command in '/home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/build/my_chatter_msgs': CMAKE_PREFIX_PATH=/home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/install/chatter:/home/ff/ee106a/robot_workspaces/ur/install/ur7e_utils:/opt/ros/humble /usr/bin/cmake /home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/src/my_chatter_msgs -DCMAKE_INSTALL_PREFIX=/home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/install/my_chatter_msgs
+[1.060s] -- The C compiler identification is GNU 11.4.0
+[1.177s] -- The CXX compiler identification is GNU 11.4.0
+[1.192s] -- Detecting C compiler ABI info
+[1.355s] -- Detecting C compiler ABI info - done
+[1.365s] -- Check for working C compiler: /usr/bin/cc - skipped
+[1.365s] -- Detecting C compile features
+[1.367s] -- Detecting C compile features - done
+[1.377s] -- Detecting CXX compiler ABI info
+[1.552s] -- Detecting CXX compiler ABI info - done
+[1.564s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.565s] -- Detecting CXX compile features
+[1.565s] -- Detecting CXX compile features - done
+[1.587s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.927s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[2.192s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[2.254s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[2.287s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[2.494s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.846s] [31mCMake Error at /opt/ros/humble/share/rosidl_adapter/cmake/rosidl_adapt_interfaces.cmake:59 (message):
+[2.846s]   execute_process(/usr/bin/python3 -m rosidl_adapter --package-name
+[2.846s]   my_chatter_msgs --arguments-file
+[2.846s]   /home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/build/my_chatter_msgs/rosidl_adapter__arguments__my_chatter_msgs.json
+[2.846s]   --output-dir
+[2.846s]   /home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/build/my_chatter_msgs/rosidl_adapter/my_chatter_msgs
+[2.846s]   --output-file
+[2.846s]   /home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/build/my_chatter_msgs/rosidl_adapter/my_chatter_msgs.idls)
+[2.846s]   returned error code 1:
+[2.846s] 
+[2.846s]   Error processing 'float32 Timestamp' of 'my_chatter_msgs/TimestampString':
+[2.847s]   ''Timestamp' is an invalid field name.  It should have the pattern
+[2.847s]   '^(?!.*__)(?!.*_$)[a-z][a-z0-9_]*$''
+[2.847s] 
+[2.847s]   Traceback (most recent call last):
+[2.847s] 
+[2.847s]     File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+[2.847s]       return _run_code(code, main_globals, None,
+[2.847s]     File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+[2.847s]       exec(code, run_globals)
+[2.847s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/__main__.py", line 19, in <module>
+[2.847s]       sys.exit(main())
+[2.847s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/main.py", line 53, in main
+[2.847s]       abs_idl_file = convert_to_idl(
+[2.847s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/__init__.py", line 19, in convert_to_idl
+[2.847s]       return convert_msg_to_idl(
+[2.847s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/msg/__init__.py", line 28, in convert_msg_to_idl
+[2.847s]       msg = parse_message_string(package_name, input_file.stem, content)
+[2.847s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/parser.py", line 519, in parse_message_string
+[2.848s]       fields.append(Field(
+[2.848s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/parser.py", line 354, in __init__
+[2.848s]       raise NameError(
+[2.848s] 
+[2.848s]   NameError: 'Timestamp' is an invalid field name.  It should have the
+[2.848s]   pattern '^(?!.*__)(?!.*_$)[a-z][a-z0-9_]*$'
+[2.848s] 
+[2.848s] Call Stack (most recent call first):
+[2.848s]   /opt/ros/humble/share/rosidl_cmake/cmake/rosidl_generate_interfaces.cmake:130 (rosidl_adapt_interfaces)
+[2.848s]   CMakeLists.txt:15 (rosidl_generate_interfaces)
+[2.848s] 
+[2.848s] [0m
+[2.848s] -- Configuring incomplete, errors occurred!
+[2.848s] See also "/home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/build/my_chatter_msgs/CMakeFiles/CMakeOutput.log".
+[2.857s] Invoked command in '/home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/build/my_chatter_msgs' returned '1': CMAKE_PREFIX_PATH=/home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/install/chatter:/home/ff/ee106a/robot_workspaces/ur/install/ur7e_utils:/opt/ros/humble /usr/bin/cmake /home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/src/my_chatter_msgs -DCMAKE_INSTALL_PREFIX=/home/cc/ee106a/sp26/class/ee106a-abz/ros_workspaces/lab1/install/my_chatter_msgs

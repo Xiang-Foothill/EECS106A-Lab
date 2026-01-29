@@ -1,0 +1,2 @@
+string input
+float64 timestamp
