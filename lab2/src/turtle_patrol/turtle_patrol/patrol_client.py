@@ -1,17 +1,18 @@
 import rclpy
 from rclpy.node import Node
-
+import json
+import sys
 # Import our custom service
 from turtle_patrol_interface.srv import Patrol
 
 
 class TurtlePatrolClient(Node):
 
-    def __init__(self):
+    def __init__(self, turtle_name, vel, omega, x, y, theta):
         super().__init__('turtle1_patrol_client')
 
 
-        self._service_name = '/turtle1/patrol'
+        self._service_name = '/patrol'
 
         # Create a client for our Patrol service type
         self._client = self.create_client(Patrol, self._service_name)
@@ -21,15 +22,17 @@ class TurtlePatrolClient(Node):
         while not self._client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info(f"Service {self._service_name} not available, waiting...")
 
-        # Hard-coded request values 
-        vel = 2.0
-        omega = 1.0
-        self.get_logger().info(f"Requesting patrol: vel={vel}, omega={omega}")
+        # get the service
+        self.get_logger().info(f"Requesting patrol: turtle_name = {turtle_name} vel={vel}, omega={omega}, x = {x}, y = {y}, theta = {theta}")
 
         # Build request
         req = Patrol.Request()
+        req.turtle_name = turtle_name
         req.vel = vel
         req.omega = omega
+        req.x = x
+        req.y = y
+        req.theta = theta
 
         # Send request (async under the hood)
         self._future = self._client.call_async(req)
@@ -37,7 +40,14 @@ class TurtlePatrolClient(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = TurtlePatrolClient()
+    turtle_name = sys.argv[1]
+    vel = float(sys.argv[2])
+    omega = float(sys.argv[3])
+    x = float(sys.argv[4])
+    y = float(sys.argv[5])
+    theta = float(sys.argv[6])
+
+    node = TurtlePatrolClient(turtle_name = turtle_name, vel = vel, omega = omega, x = x, y = y, theta = theta)
 
     # Block here until the service responds (simple for teaching)
     rclpy.spin_until_future_complete(node, node._future)

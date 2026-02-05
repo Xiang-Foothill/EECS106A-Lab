@@ -10,10 +10,7 @@ from turtle_patrol_interface.srv import Patrol
 class Turtle1PatrolServer(Node):
     def __init__(self):
         super().__init__('turtle1_patrol_server')
-
-        # Publisher: actually drives turtle1
-        self._cmd_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
-        self._srv = self.create_service(Patrol, '/turtle1/patrol', self.patrol_callback)
+        self._srv = self.create_service(Patrol, '/patrol', self.patrol_callback)
 
         # Current commanded speeds (what timer publishes)
         self._lin = 0.0
@@ -23,37 +20,38 @@ class Turtle1PatrolServer(Node):
         self._pub_timer = self.create_timer(0.1, self._publish_current_cmd)
 
         self.get_logger().info('Turtle1PatrolServer ready (continuous publish mode).')
+        self.turtle_pub_dict = {}
+        self.turtle_cmd_dict = {}
 
     # -------------------------------------------------------
     # Timer publishes current Twist
     # -------------------------------------------------------
     def _publish_current_cmd(self):
-        msg = Twist()
-        msg.linear.x = self._lin
-        msg.angular.z = self._ang
-        self._cmd_pub.publish(msg)
+        for name in self.turtle_pub_dict:
+
+            msg = Twist()
+            msg.linear.x = self.turtle_cmd_dict[name][0]
+            msg.angular.z = self.turtle_cmd_dict[name][1]
+            self.turtle_pub_dict[name].publish(msg)
 
     # -------------------------------------------------------
     # Service callback: update speeds
     # -------------------------------------------------------
     def patrol_callback(self, request: Patrol.Request, response: Patrol.Response):
-        self.get_logger().info(
-            f"Patrol request: vel={request.vel:.2f}, omega={request.omega:.2f}"
-        )
+        if request.turtle_name not in self.turtle_pub_dict:
+            self.turtle_pub_dict[request.turtle_name] = self.create_publisher(Twist, f'/{request.turtle_name}/cmd_vel', 10)
+        self.turtle_cmd_dict[request.turtle_name] = [request.vel, request.omega]
 
-        # Update the speeds that the timer publishes
-        self._lin = float(request.vel)
-        self._ang = float(request.omega)
+        self.get_logger().info(
+            f"Patrol request: turtle_name = {request.turtle_name} vel={request.vel:.2f}, omega={request.omega:.2f}"
+        )
 
         # Prepare response Twist reflecting current command
         cmd = Twist()
-        cmd.linear.x = self._lin
-        cmd.angular.z = self._ang
+        cmd.linear.x = request.vel
+        cmd.angular.z = request.omega
         response.cmd = cmd
 
-        self.get_logger().info(
-            f"Streaming cmd_vel: lin.x={self._lin:.2f}, ang.z={self._ang:.2f} (10 Hz)"
-        )
         return response
 
 
