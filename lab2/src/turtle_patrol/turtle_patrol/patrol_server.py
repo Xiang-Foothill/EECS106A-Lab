@@ -38,6 +38,20 @@ class Turtle1PatrolServer(Node):
     # Service callback: update speeds
     # -------------------------------------------------------
     def patrol_callback(self, request: Patrol.Request, response: Patrol.Response):
+        teleport_service_name = f'/{request.turtle_name}/teleport_absolute'
+
+        # Create a client for our Teleport service type
+        self._client = self.create_client(TeleportAbsolute, teleport_service_name)
+
+        # Build request
+        tele_req = TeleportAbsolute.Request()
+        tele_req.x = request.x
+        tele_req.y = request.y
+        tele_req.theta = request.theta
+
+        # Send request (async under the hood)
+        self._future = self._client.call_async(tele_req)
+
         if request.turtle_name not in self.turtle_pub_dict:
             self.turtle_pub_dict[request.turtle_name] = self.create_publisher(Twist, f'/{request.turtle_name}/cmd_vel', 10)
         self.turtle_cmd_dict[request.turtle_name] = [request.vel, request.omega]
