@@ -35,13 +35,32 @@ def ur7e_foward_kinematics_from_angles(joint_angles):
     w0[:, 4] = [0., 0., -1] # wrist 2 
     w0[:, 5] = [0., 1., 0] # wrist 3
 
+    
     # Rotation matrix from base_link to wrist_3_link in zero config
     R = np.array([[-1., 0., 0.],
                   [0., 0., 1.], 
                   [0., 1., 0.]])
 
+    # translation of the end-effector at the initial configuration
+    g_st_init = np.eye(4)
+    g_st_init[0:3, 0:3] = R
+    g_st_init[0:3, 3] = q0[:, 5]
+
+    zi_list = np.empty((6, 6))
+    for i in range(6):
+        q_i = q0[:, i]
+        w_i = w0[:, i]
+        v_i = np.cross(q_i, w_i)
+        zi = np.zeros(6)
+
+        zi[0 : 3] = v_i
+        zi[3 : 6] = w_i
+        zi_list[:, i] = zi
+    
+    product_exp = kfs.prod_exp(zi_list, joint_angles)
+
     # YOUR CODE HERE (Task 1)
-    print(R)
+    return product_exp @ g_st_init
 
 def ur7e_forward_kinematics_from_joint_state(joint_state):
     """
@@ -60,5 +79,5 @@ def ur7e_forward_kinematics_from_joint_state(joint_state):
     angles = np.zeros(6)
     # YOUR CODE HERE (Task 2)
     
-
+    # we handle joint_state-to-angle transformation directly in the call_back function of forward_kinematics_node.py
     # END YOUR CODE HERE
