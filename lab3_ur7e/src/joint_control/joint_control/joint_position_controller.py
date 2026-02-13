@@ -8,11 +8,7 @@ import tty
 import termios
 import threading
 import select
-
-# Key mappings
-INCREMENT_KEYS = ['1','2','3','4','5','6']
-DECREMENT_KEYS = ['q','w','e','r','t','y']
-JOINT_STEP = 0.15 # radians per key press
+import time
 
 class TrajController(Node):
     def __init__(self, new_pos):
@@ -27,18 +23,21 @@ class TrajController(Node):
             'shoulder_pan_joint',
         ]
         self.new_positions = new_pos
+        print(f"target positions: {self.new_positions}")
 
         self.joint_positions = [0.0] * 6
         self.got_joint_states = False  # Failsafe: don't publish until joint states received
         
-        self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
-        
         self.pub = self.create_publisher(JointTrajectory, '/joint_trajectory_validated', 10)
-        
-        self.running = True
-        threading.Thread(target=self.keyboard_loop, daemon=True).start()
+    
+    def joint_state_callback(self, msg: JointState):
+        for i, name in enumerate(self.joint_names):
+            if name in msg.name:
+                idx = msg.name.index(name)
+                self.joint_positions[i] = msg.position[idx]
+        self.got_joint_states = True
 
-    def pub_trajectory()
+    def pub_trajectory(self):
         
         traj = JointTrajectory()
         traj.joint_names = self.joint_names
@@ -49,14 +48,15 @@ class TrajController(Node):
         traj.points.append(point)
         self.pub.publish(traj)
 
-        self.joint_positions = new_positions
-
 def main(args=None):
     rclpy.init(args=args)
-    new_pos = [args[1], args[2], args[3], args[4], args[5], args[6]]
+    new_pos = [sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6]]
+    new_pos = [float(pos) for pos in new_pos]
     node = TrajController(new_pos = new_pos)
+    node.pub_trajectory()
     try:
         rclpy.spin(node)
+        time.sleep(2)
     except KeyboardInterrupt:
         node.running = False
         print("\nExiting keyboard controller...")
