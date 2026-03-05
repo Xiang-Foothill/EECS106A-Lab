@@ -62,8 +62,11 @@ class UR7e_CubeGrasp(Node):
         Use the following offsets for pre-grasp position:
         z offset: +0.185 (to be above the cube by accounting for gripper length)
         '''
-        ...
-        self.job_queue.append(...)
+        pre_grasp_pos = [cube_pose.point.x - 0.02, cube_pose.point.y, cube_pose.point.z + 0.185]
+        target_joint_pos = self.ik_planner.compute_ik(current_joint_state=self.joint_state, 
+                                                      x = pre_grasp_pos[0], y =pre_grasp_pos[1], z =pre_grasp_pos[2],
+                                                      qx=0. , qy =1., qz = 0., qw = 0. )
+        self.job_queue.append(target_joint_pos)
 
         # 2) Move to Grasp Position (lower the gripper to the cube)
         '''
@@ -71,19 +74,30 @@ class UR7e_CubeGrasp(Node):
         DO NOT CHANGE z offset lower than +0.14. 
         '''
 
+        target_joint_pos = self.ik_planner.compute_ik(current_joint_state=self.joint_state, 
+                                                      x = cube_pose.point.x, y =cube_pose.point.y, z =cube_pose.point.z + 0.145,
+                                                      qx=0. , qy =1., qz = 0., qw = 0. )
+        self.job_queue.append(target_joint_pos)
+
         # 3) Close the gripper. See job_queue entries defined in init above for how to add this action.
-        ...
+        self.job_queue.append("toggle_grip")
         
         # 4) Move back to Pre-Grasp Position
-
+        target_joint_pos = self.ik_planner.compute_ik(current_joint_state=self.joint_state, 
+                                                      x = pre_grasp_pos[0], y =pre_grasp_pos[1], z =pre_grasp_pos[2],
+                                                      qx=0. , qy =1., qz = 0., qw = 0. )
+        self.job_queue.append(target_joint_pos)
         # 5) Move to release Position
         '''
         We want the release position to be 0.3m to the left of the initial cube pose.
         Which offset will you change to achieve this and in what direction?
         '''
-
+        target_joint_pos = self.ik_planner.compute_ik(current_joint_state=self.joint_state, 
+                                                      x = pre_grasp_pos[0] + 0.3, y =pre_grasp_pos[1], z =pre_grasp_pos[2],
+                                                      qx=0. , qy =1., qz = 0., qw = 0. )
+        self.job_queue.append(target_joint_pos)
         # 6) Release the gripper
-        ...
+        self.job_queue.append("toggle_grip")
 
         self.execute_jobs()
 

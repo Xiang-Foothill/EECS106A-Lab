@@ -26,7 +26,7 @@ class RealSensePCSubscriber(Node):
         # Subscribers
         self.pc_sub = self.create_subscription(
             PointCloud2,
-            'INSERT_TOPIC_NAME',
+            '/camera/camera/depth/color/points',
             self.pointcloud_callback,
             10
         )
@@ -44,15 +44,14 @@ class RealSensePCSubscriber(Node):
 
         # Filter points between z coords between min_z and max_z and max_y
         # Call the numpy array filtered_points
-
-        source_frame = _______ # TODO: Fill in the source frame based on what you implemented in your static TF broadcaster 
+        source_frame = 'camera_depth_optical_frame' # TODO: Fill in the source frame based on what you implemented in your static TF broadcaster 
         try:
-            tf = self.tf_buffer.lookup_transform(_______, _______, Time()) # TODO: the entire tf lookup params should be filled in
+            tf = self.tf_buffer.lookup_transform(self.target_frame, source_frame, Time()) # TODO: the entire tf lookup params should be filled in
         except TransformException as ex:
             self.get_logger().warn(f'Could not transform {source_frame} to {self.target_frame}: {ex}')
             return
 
-        transformed_cloud = do_transform_cloud(_______, _______) # TODO: look what do_transform_cloud takes in and outputs
+        transformed_cloud = do_transform_cloud(msg, tf) # TODO: look what do_transform_cloud takes in and outputs
 
         raw_points = pc2.read_points(
             transformed_cloud,
@@ -65,7 +64,14 @@ class RealSensePCSubscriber(Node):
             ).astype(np.float32, copy=False)
 
         # TODO: Create masks based on the specified min, max y and z parameters above in order to filter points
-        filtered_points = _______
+        # Extract Y and Z columns for readability (X is 0, Y is 1, Z is 2)
+        y_coords = points_base[:, 1]
+        z_coords = points_base[:, 2]
+
+        mask = (z_coords >= self.min_z) & (z_coords <= self.max_z) & (y_coords <= self.max_y)
+        
+        # Apply the mask to filter the arrayself.get_clock().now().to_msg()
+        filtered_points = points_base[mask]
 
         if filtered_points.size == 0:
             self.get_logger().warn(
@@ -80,12 +86,17 @@ class RealSensePCSubscriber(Node):
         self.filtered_points_pub.publish(filtered_cloud)
 
         # TODO: Compute cube position in base_link frame using filtered_points.
-        cube_x = _______
-        cube_y = _______
-        cube_z = _______
+        cube_x = float(np.mean(filtered_points[:, 0]))
+        cube_y = float(np.mean(filtered_points[:, 1]))
+        cube_z = float(np.mean(filtered_points[:, 2]))
 
         # TODO: Publish the cube pose message with the cube position information
-        cube_pose = _______
+        cube_pose = PointStamped()
+        cube_pose.header.frame_id = self.target_frame
+        cube_pose.header.stamp = self.get_clock().now().to_msg()
+        cube_pose.point.x = cube_x
+        cube_pose.point.y = cube_y
+        cube_pose.point.z = cube_z
 
         self.cube_pose_pub.publish(cube_pose)
 

@@ -2,6 +2,9 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import Transform
+from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Quaternion
 from tf2_ros import StaticTransformBroadcaster
 from scipy.spatial.transform import Rotation as R
 import numpy as np
@@ -24,12 +27,29 @@ class ConstantTransformPublisher(Node):
         # ------------------------------------------
         # TODO: Fill out TransformStamped message
         # ------------------------------------------
+        self.transform.child_frame_id = 'camera_depth_optical_frame'
+        self.transform.header.frame_id = 'wrist_3_link'
 
+        r = R.from_matrix([
+                [1., 0., 0],
+                [0., 1., 0],
+                [0, 0, 1.]])
+        quaternion = r.as_quat()
+        
+
+        self.transform.transform.translation.x = -0.025
+        self.transform.transform.translation.y = 0.13
+        self.transform.transform.translation.z = 0.0
+
+        self.transform.transform.rotation.x = quaternion[0]
+        self.transform.transform.rotation.y = quaternion[1]
+        self.transform.transform.rotation.z = quaternion[2]
+        self.transform.transform.rotation.w = quaternion[3]
         # Convert rotation matrix to quaternion (x, y, z, w)
 
         # Populate TransformStamped
 
-        self.get_logger().info(f"Broadcasting transform:\n{G}\nQuaternion: {q}")
+        self.get_logger().info(f"Broadcasting transform:\n{G}\nQuaternion: {quaternion}")
 
 
         self.timer = self.create_timer(0.05, self.broadcast_tf)
