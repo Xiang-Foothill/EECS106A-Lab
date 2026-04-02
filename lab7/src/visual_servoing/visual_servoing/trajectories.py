@@ -224,13 +224,13 @@ class LinearTrajectory(Trajectory):
             # TODO: calculate the position of the end effector at time t,
             # For the first half of the trajectory, maintain a constant acceleration
 
-            pos = ...
+            pos = self.start_position + 0.5 * self.acceleration * (t ** 2) * self.unit_direction
         else:
             # TODO: Calculate the position of the end effector at time t,
             # For the second half of the trajectory, maintain a constant acceleration
             # Hint: Calculate the remaining distance to the goal position.
 
-            pos = ...
+            pos = self.start_position + (self.distance - 0.5 * ((self.total_time - t) ** 2) * self.acceleration) * self.unit_direction
 
         # Combine position and orientation
         return np.concatenate([pos, self.orientation])
@@ -260,12 +260,12 @@ class LinearTrajectory(Trajectory):
             # TODO: calculate velocity using the acceleration and time
             # For the first half of the trajectory, we maintain a constant acceleration
 
-            speed = ...
+            speed = self.acceleration * t
         else:
             # TODO: start slowing the velocity down from the maximum one
             # For the second half of the trajectory, maintain a constant deceleration
 
-            speed = ...
+            speed = self.v_max - self.acceleration * (t - self.t_half)
 
         vel = speed * self.unit_direction
 
@@ -303,6 +303,7 @@ class CircularTrajectory(Trajectory):
 
         # Gripper pointing down quaternion
         self.orientation = np.array([0.0, 1.0, 0.0, 0.0])
+        self.total_time = total_time
 
     def target_pose(self, time):
         """
@@ -329,13 +330,13 @@ class CircularTrajectory(Trajectory):
             # TODO: calculate the ANGLE of the end effector at time t,
             # For the first half of the trajectory, maintain a constant acceleration
 
-            theta = ...
+            theta = 0.5 * self.angular_acceleration * (t ** 2)
         else:
             # TODO: Calculate the ANGLE of the end effector at time t,
             # For the second half of the trajectory, maintain a constant acceleration
             # Hint: Calculate the remaining angle to the goal position.
 
-            theta = ...
+            theta = (self.total_angle - 0.5 * ((self.total_time - t) ** 2) * self.angular_acceleration)
 
         pos = self.center_position + self.radius * np.array([np.cos(theta), np.sin(theta), 0])
 
@@ -366,14 +367,14 @@ class CircularTrajectory(Trajectory):
             # TODO: calculate ANGULAR position and velocity using the acceleration and time
             # For the first half of the trajectory, we maintain a constant acceleration
 
-            theta = ...
-            theta_dot = ...
+            theta = 0.5 * self.angular_acceleration * (t ** 2)
+            theta_dot = self.angular_acceleration * t
         else:
             # TODO: start slowing the ANGULAR velocity down from the maximum one
             # For the second half of the trajectory, maintain a constant deceleration
 
-            theta = ...
-            theta_dot = ...
+            theta = (self.total_angle - 0.5 * ((self.total_time - t) ** 2) * self.angular_acceleration)
+            theta_dot = self.angular_v_max - self.angular_acceleration * (t - self.t_half)
 
         vel = self.radius * theta_dot * np.array([-np.sin(theta), np.cos(theta), 0])
 

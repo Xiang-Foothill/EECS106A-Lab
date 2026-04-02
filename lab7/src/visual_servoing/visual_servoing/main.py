@@ -55,8 +55,8 @@ class VisualServo(Node):
 
         if self.controller_type == 'pid':
             # PID gains tuned for UR7e (Use these as a start)
-            Kp = 0.2 * np.array([0.4, 2, 1.7, 1.5, 2, 2])
-            Kd = 0.01 * np.array([2, 1, 2, 0.5, 0.8, 0.8])
+            Kp = 2. * np.array([0.4, 2, 1.7, 1.5, 2, 2])
+            Kd = 0.2 * np.array([2, 1, 2, 0.5, 0.8, 0.8])
             Ki = 0.01 * np.array([1.4, 1.4, 1.4, 1, 0.6, 0.6])
 
             self.velocity_controller = PIDJointVelocityController(self, Kp, Ki, Kd)
@@ -624,7 +624,7 @@ def main(args=None):
                        help='Type of trajectory: line or circle')
     parser.add_argument('--ar_marker', type=int, default=0,
                        help='AR marker ID to track')
-    parser.add_argument('--total_time', type=float, default=10.0,
+    parser.add_argument('--total_time', type=float, default=30.0,
                        help='Total time for trajectory execution (seconds)')
     parser.add_argument('--circle_radius', type=float, default=0.1,
                        help='Radius for circular trajectory (meters)')

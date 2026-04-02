@@ -149,6 +149,10 @@ class PIDJointVelocityController(Controller):
         super().__init__(node)
 
         # TODO: Add your code here!
+        self.Kp = Kp
+        self.Kd = Kd
+        self.Ki = Ki
+        self.integral_error = np.zeros(6)
 
         self.node.get_logger().info("Initialized PID Joint Velocity Controller")
 
@@ -182,8 +186,22 @@ class PIDJointVelocityController(Controller):
         """
 
         # TODO: Add your code here!
+        # Ensure all inputs are numpy arrays for vector math
+        target_position = np.array(target_position)
+        target_velocity = np.array(target_velocity)
+        current_position = np.array(current_position)
+        current_velocity = np.array(current_velocity)
 
-        raise NotImplementedError
+        # Calculate position and velocity errors
+        position_error = target_position - current_position
+        velocity_error = target_velocity - current_velocity
+
+        self.integral_error += position_error
+
+        # Compute the control law
+        u = target_velocity + (self.Kp * position_error) + (self.Ki * self.integral_error) + (self.Kd * velocity_error)
+
+        return u
 
     def get_name(self):
         """Returns the name of this controller"""
