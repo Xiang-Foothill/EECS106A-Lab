@@ -47,17 +47,28 @@ class OccupancyGrid2d(Node):
         self.declare_parameter("random_downsample", 0.1)
         self._random_downsample = self.get_parameter("random_downsample").value
 
-         # Dimensions and bounds.
-        # TODO! You'll need to set values for class variables called:
-        # -- self._x_num
-        # -- self._x_min
-        # -- self._x_max
-        # -- self._x_res # The resolution in x. Note: This isn't a ROS parameter. What will you do instead?
-        # -- self._y_num
-        # -- self._y_min
-        # -- self._y_max
-        # -- self._y_res # The resolution in y. Note: This isn't a ROS parameter. What will you do instead?
+        # Dimensions and bounds.
+        # Note: In ROS 2, parameters must be declared before they are retrieved.
+        self.declare_parameter('x_num', 100)
+        self.declare_parameter('x_min', -10.0)
+        self.declare_parameter('x_max', 10.0)
+        self.declare_parameter('y_num', 100)
+        self.declare_parameter('y_min', -10.0)
+        self.declare_parameter('y_max', 10.0)
 
+        self._x_num = self.get_parameter('x_num').value
+        self._x_min = self.get_parameter('x_min').value
+        self._x_max = self.get_parameter('x_max').value
+        self._y_num = self.get_parameter('y_num').value
+        self._y_min = self.get_parameter('y_min').value
+        self._y_max = self.get_parameter('y_max').value
+
+        # Calculate resolutions based on the bounds and number of cells.
+        # Using float() ensures we don't accidentally do integer division if bounds are ints.
+        self._x_res = (self._x_max - self._x_min) / float(self._x_num) if self._x_num > 0 else 0.0
+        self._y_res = (self._y_max - self._y_min) / float(self._y_num) if self._y_num > 0 else 0.0
+
+        # Update probabilities.
         self.declare_parameter("update/occupied", 0.7)
         self._occupied_update = self.probability_to_logodds(
             self.get_parameter("update/occupied").value)
@@ -72,14 +83,18 @@ class OccupancyGrid2d(Node):
             self.get_parameter("update/free_threshold").value)
 
         # Topics.
-        # TODO! You'll need to set values for class variables called:
-        # -- self._sensor_topic
-        # -- self._vis_topic
+        self.declare_parameter('sensor_topic', '/scan')
+        self._sensor_topic = self.get_parameter('sensor_topic').value
+
+        self.declare_parameter('vis_topic', '/map_visual')
+        self._vis_topic = self.get_parameter('vis_topic').value
 
         # Frames.
-        # TODO! You'll need to set values for class variables called:
-        # -- self._sensor_frame
-        # -- self._fixed_frame
+        self.declare_parameter('sensor_frame', 'base_link')
+        self._sensor_frame = self.get_parameter('sensor_frame').value
+
+        self.declare_parameter('fixed_frame', 'odom')
+        self._fixed_frame = self.get_parameter('fixed_frame').value
 
         return True
 
@@ -129,6 +144,8 @@ class OccupancyGrid2d(Node):
             self.get_logger().warn("Robot not on ground plane.")
         if abs(roll) > 0.1 or abs(pitch) > 0.1:
             self.get_logger().warn("Robot roll/pitch too large.")
+        
+        updated_voxels = set()
         # Loop over all ranges in the LaserScan.
         for idx, r in enumerate(msg.ranges):
             if np.random.rand() > self._random_downsample or np.isnan(r):
@@ -136,6 +153,8 @@ class OccupancyGrid2d(Node):
             
             # Get angle of this ray in fixed frame.
             # TODO!
+            start_angle = yaw + msg.angle_min
+            cur_angle = start_angle + idx * msg.angle_increment
 
             if r > msg.range_max or r < msg.range_min:
                 continue
@@ -144,7 +163,23 @@ class OccupancyGrid2d(Node):
             # Update log-odds at each voxel along the way.
             # Only update each voxel once. 
             # The occupancy grid is stored in self._map
-            # TODO!
+            for ray_r in np.arange(0., r + 0.1, 0.05):
+                coordinates = self.point_to_voxel(sensor_x + ray_r * np.cos(cur_angle), sensor_y + ray_r * np.sin(cur_angle))
+                
+                if coordinates is None:
+                    continue
+                
+                ray_x, ray_y = coordinates
+
+                if (ray_x, ray_y) in updated_voxels:
+                    continue
+
+                updated_voxels.add((ray_x, ray_y))
+
+                if ray_r < r:
+                    self._map[ray_x, ray_y] = max(self._map[ray_x, ray_y] + self._free_update, self._free_threshold)
+                else:
+                    self._map[ray_x, ray_y] = min(self._map[ray_x, ray_y] + self._occupied_update, self._occupied_threshold)
         # Visualize.
         self.visualize()
 

@@ -60,10 +60,19 @@ class TurtleBotController(Node):
         waypoint_pose = PoseStamped()
         # TODO: Fill in waypoint pose message using docs for PoseStamped 
         # (recall what frame this trajectory point is in from your trajectory.py code)
-        # NOTE: The staticmethod below may be helpful
+        waypoint_pose.pose.position.x = waypoint[0]
+        waypoint_pose.pose.position.y = waypoint[1]
+        waypoint_pose.pose.position.z = 0.
 
+        quat = self._quat_from_yaw(waypoint[2])
+        waypoint_pose.pose.orientation.x = quat[0]
+        waypoint_pose.pose_orientation.y = quat[1]
+        waypoint_pose.pose.orientation.z = quat[2]
+        waypoint_base.pose.orientation.w = quat[3]
 
         # TODO: Find tf and transform waypoint to base_link
+        tf_buffer = tf2_ros.Buffer()
+        trans = tf_buffer.lookup_transform('base_link', 'odom', rclpy.time.Time())
         # NOTE: do_transform_pose takes in and outputs a pose message type not PoseStamped (this is contrary to online documentation)
         odom_to_base = ...
         waypoint_base = ...

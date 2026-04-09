@@ -42,23 +42,24 @@ class ImageSubscriber(Node):
                 for i, mask in enumerate(masks):
 
                     # TODO: Get number of pixels in mask
-                    pixel_count = 0. 
+                    pixel_count = np.sum(mask)
 
                     CONE_AREA = 0.0208227849
 
                     # TODO: Get depth of image 
-                    depth = 0.
+                    depth = (self.fx * self.fy * CONE_AREA / pixel_count) ** 0.5
 
                     self.get_logger().info(f'Cone {i+1}: depth={depth:.3f}m')
 
 
                     # TODO: Get u, and v of cone in image coordinates
-                    u, v = 0.
+                    coords_one = np.argwhere(mask)
+                    u, v = coords_one.mean(axis = 0)
 
                     # TODO: Find X , Y , Z of cone
-                    X = 0.
-                    Y = 0.
-                    Z = 0. 
+                    Z = depth
+                    X = (u - self.cx) * Z / self.fx
+                    Y = (v - self.cy) * Z / self.fy
 
                     # Convert to turtlebot frame
                     # There's no camera frame for the turtlebots, so we just do this instead 
@@ -75,6 +76,7 @@ class ImageSubscriber(Node):
                     point_cam.point.y = goal_point[1]
                     point_cam.point.z = goal_point[2]
                     self.cone_position_pub.publish(point_cam)
+                    self.get_logger().info(f"Cone spotted at x = {goal_point[0]}, y = {goal_point[1]}, z = {goal_point[3]}")
             else:
                 self.get_logger().info('No cones spotted')
 
@@ -85,6 +87,12 @@ class ImageSubscriber(Node):
         # -------------------------------------------
         self.get_logger().info("Recieved Camera Info")
         
+        self.fx = msg.k[0]
+        self.cx = msg.k[2]
+        self.fy = msg.k[4]
+        self.cy = msg.k[5]
+
+        self.camera_intrinsics = True
 
 def main(args=None):
     rclpy.init(args=args)
