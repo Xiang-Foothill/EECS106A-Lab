@@ -66,19 +66,34 @@ class TurtleBotController(Node):
 
         quat = self._quat_from_yaw(waypoint[2])
         waypoint_pose.pose.orientation.x = quat[0]
-        waypoint_pose.pose_orientation.y = quat[1]
+        waypoint_pose.pose.orientation.y = quat[1]
         waypoint_pose.pose.orientation.z = quat[2]
-        waypoint_base.pose.orientation.w = quat[3]
+        waypoint_pose.pose.orientation.w = quat[3]
 
         # TODO: Find tf and transform waypoint to base_link
+        node = rclpy.create_node('turtlebot_controller')
         tf_buffer = tf2_ros.Buffer()
-        trans = tf_buffer.lookup_transform('base_link', 'odom', rclpy.time.Time())
-        # NOTE: do_transform_pose takes in and outputs a pose message type not PoseStamped (this is contrary to online documentation)
-        odom_to_base = ...
-        waypoint_base = ...
+        tf_listener = tf2_ros.TransformListener(tf_buffer, node)
+
+        # Keep trying until transform available
+        while rclpy.ok():
+            try:
+                odom_to_base = tf_buffer.lookup_transform('base_link', 'odom', rclpy.time.Time()) ## TODO: Apply a lookup transform from our world frame to the turtlebot frame
+                break
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                node.get_logger().warn('TF lookup failed, retrying...')
+                rclpy.spin_once(node, timeout_sec=0.1)
+        
+        waypoint_base = do_transform_pose(waypoint_pose.pose, odom_to_base)
 
         # TODO: Calculate proportional error terms including x_err and y_err
+        x_err = waypoint_base.position.x
+        y_err = waypoint_base.position.y
+
+        q = waypoint_base.orientation
         
+        quat_vec = [q.w, q.x, q.y, q.z]
+        roll, pitch, yaw_err = euler.quat2euler(quat_vec, axes='sxyz')
 
         if abs(x_err) < 0.03 and abs(y_err) < 0.03:
             self.traj_index += 1
@@ -88,10 +103,25 @@ class TurtleBotController(Node):
             return
 
         # TODO: Update derivative and integral error terms (refer to class variables defined in init)
+        if self.prev_x_err is not None:
+            dx = x_err - self.prev_x_err
+        else:
+            dx = 0.
         
-        # TODO: Generate control command from error terms 
+        if self.prev_yaw_err is not None:
+            d_yaw = yaw_err - self.prev_yaw_err
+        else:
+            d_yaw = 0.
+
+        self.prev_x_err = x_err
+        self.prev_yaw_err = yaw_err
+
+        # TODO: Generate control command from error terms
         control_cmd = Twist()
-        
+        x_cmd = self.Kp[0][0] * x_err + self.Kd[0][0] * dx
+        yaw_cmd = self.Kp[1][1] * yaw_err + self.Kd[1][1] * d_yaw
+        control_cmd.linear.x = float(x_cmd)
+        control_cmd.angular.z = float(yaw_cmd)
         self.pub.publish(control_cmd)
   
 
@@ -101,7 +131,7 @@ class TurtleBotController(Node):
     def planning_callback(self, msg: PointStamped):
         if self.trajectory:
             return
-        self.trajectory = plan_curved_trajectory(...)
+        self.trajectory = plan_curved_trajectory([msg.point.x, msg.point.y])
         self.traj_index = 0
         self.x_i_err = 0.0
         self.yaw_i_err = 0.0
